@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace AdvHydroPower {
-	public class AdvHydroPowerMod : IUserMod {
+	public class AdvHydroPowerMod : LoadingExtensionBase, IUserMod {
 		public const string NAME = "Advance Hydro Power";
 		public const string VERSION = "1.0.*";
 		public const string RELEASE_VERSION = "1.0.1";
@@ -20,28 +20,23 @@ namespace AdvHydroPower {
 				return NAME;
 			}
 		}
-	}
-
-	public sealed class AdvHydroPowerModLoadingExtension : LoadingExtensionBase {
-		private List<RedirectCallsState> _redirectionStates = new List<RedirectCallsState>();
+		private List<RedirectCallState> _redirectionStates = new List<RedirectCallState>();
 
 		public override void OnLevelLoaded( LoadMode mode ) {
 			base.OnLevelLoaded( mode );
 
-			if( mode != LoadMode.LoadGame && mode != LoadMode.NewGame ) {
+			if ( mode != LoadMode.LoadGame && mode != LoadMode.NewGame ) {
 				return;
 			}
 
 			Debug.LogWarning( string.Format( "[{0}] {1}: {2} initializing", DateTime.Now, AdvHydroPowerMod.NAME, AdvHydroPowerMod.RELEASE_VERSION ) );
-			AdvDamPowerHouseAI.RedirectCalls( _redirectionStates );
+			AdvDamPowerHouseAI.Deploy();
 		}
 
 		public override void OnLevelUnloading() {
 			base.OnLevelUnloading();
 
-			foreach ( RedirectCallsState state in _redirectionStates ) {
-				RedirectionHelper.RevertRedirect( state );
-			}
-		}
+			AdvDamPowerHouseAI.Revert();
+        }
 	}
 }

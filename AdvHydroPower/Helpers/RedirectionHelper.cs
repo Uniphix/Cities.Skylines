@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 
 namespace AdvHydroPower {
-	internal struct RedirectCallsState {
+	internal struct RedirectCallState {
 		public IntPtr fptr1;
 		public byte a;
 		public byte b;
@@ -16,16 +16,16 @@ namespace AdvHydroPower {
 	}
 
 	internal static class RedirectionHelper {
-		public static RedirectCallsState RedirectCalls( MethodInfo from, MethodInfo to ) {
+		public static RedirectCallState RedirectCalls( MethodInfo from, MethodInfo to ) {
 			return RedirectionHelper.PatchJumpTo( from.MethodHandle.GetFunctionPointer(), to.MethodHandle.GetFunctionPointer() );
 		}
 
-		public static void RevertRedirect( RedirectCallsState state ) {
+		public static void RevertRedirect( RedirectCallState state ) {
 			RedirectionHelper.RevertJumpTo( state );
 		}
 
-		private static unsafe RedirectCallsState PatchJumpTo( IntPtr site, IntPtr target ) {
-			RedirectCallsState redirectCallState = new RedirectCallsState();
+		private static unsafe RedirectCallState PatchJumpTo( IntPtr site, IntPtr target ) {
+			RedirectCallState redirectCallState = new RedirectCallState();
 			redirectCallState.fptr1 = site;
 			byte* numPtr = (byte*) site.ToPointer();
 			redirectCallState.a = *numPtr;
@@ -43,7 +43,7 @@ namespace AdvHydroPower {
 			return redirectCallState;
 		}
 
-		private static unsafe void RevertJumpTo( RedirectCallsState state ) {
+		private static unsafe void RevertJumpTo( RedirectCallState state ) {
 			byte* numPtr = (byte*) state.fptr1.ToPointer();
 			*numPtr = state.a;
 			numPtr[1] = state.b;

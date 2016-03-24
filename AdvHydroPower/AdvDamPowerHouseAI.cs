@@ -7,18 +7,28 @@ using UnityEngine;
 
 namespace AdvHydroPower {
 	public class AdvDamPowerHouseAI : DamPowerHouseAI {
+		private static RedirectCallState _revertState;
+		private static readonly MethodInfo _originalSimulationStepMethodInfo = typeof (DamPowerHouseAI).GetMethods().FirstOrDefault( m => m.Name == "SimulationStep" && m.GetParameters().Length == 3 );
+		private static readonly MethodInfo _newSimulationStepMethodInfo = typeof (AdvDamPowerHouseAI).GetMethods().FirstOrDefault( m => m.Name == "SimulationStep" && m.GetParameters().Length == 3 );
+
 		public override void SimulationStep( ushort buildingID, ref Building buildingData, ref Building.Frame frameData ) {
 			Debug.LogWarning( "Test" );
 		}
 
-		internal static void RedirectCalls( List<RedirectCallsState> callStates ) {
-			MethodInfo from = Enumerable.FirstOrDefault<MethodInfo>((IEnumerable<MethodInfo>) typeof (DamPowerHouseAI).GetMethods(), (Func<MethodInfo, bool>) (m => m.Name == "SimulationStep" && m.GetParameters().Length == 6));
-			MethodInfo to = Enumerable.FirstOrDefault<MethodInfo>((IEnumerable<MethodInfo>) typeof (AdvDamPowerHouseAI).GetMethods(), (Func<MethodInfo, bool>) (m => m.Name == "SimulationStep" && m.GetParameters().Length == 6));
-			if ( from == null || to == null ) {
-				return;
+		internal static void Deploy() {
+			if ( _originalSimulationStepMethodInfo == null ) {
+				throw new NullReferenceException( "Original SimulationStep method not found" );
 			}
 
-			callStates.Add( RedirectionHelper.RedirectCalls( from, to ) );
+			if ( _newSimulationStepMethodInfo == null ) {
+				throw new NullReferenceException( "New SimulationStep method not found" );
+			}
+
+			_revertState = RedirectionHelper.RedirectCalls( _originalSimulationStepMethodInfo, _newSimulationStepMethodInfo );
+		}
+
+		internal static void Revert() {
+			RedirectionHelper.RevertRedirect( _revertState );
 		}
 	}
 }
